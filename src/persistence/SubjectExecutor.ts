@@ -364,6 +364,32 @@ export class SubjectExecutor {
             }
 
             subjects.forEach(subject => {
+                if (subject.diffColumns) {
+                    subject.diffColumns
+                        .filter((column) => column.transformer)
+                        .forEach((column) => {
+                            const value = column.getEntityValue(
+                                subject.entity!
+                            );
+
+                            const persitedValue = this.queryRunner.connection.driver.preparePersistentValue(
+                                value,
+                                column
+                            );
+                            const hydratedValue = this.queryRunner.connection.driver.prepareHydratedValue(
+                                persitedValue,
+                                column
+                            );
+
+                            if (value !== hydratedValue) {
+                                column.setEntityValue(
+                                    subject.entity!,
+                                    hydratedValue
+                                );
+                            }
+                        });
+                }
+
                 if (subject.generatedMap) {
                     subject.metadata.columns.forEach(column => {
                         const value = column.getEntityValue(subject.generatedMap!);
@@ -444,6 +470,33 @@ export class SubjectExecutor {
                 }
 
                 const updateResult = await updateQueryBuilder.execute();
+
+                if (subject.diffColumns) {
+                    subject.diffColumns
+                        .filter((column) => column.transformer)
+                        .forEach((column) => {
+                            const value = column.getEntityValue(
+                                subject.entity!
+                            );
+
+                            const persitedValue = this.queryRunner.connection.driver.preparePersistentValue(
+                                value,
+                                column
+                            );
+                            const hydratedValue = this.queryRunner.connection.driver.prepareHydratedValue(
+                                persitedValue,
+                                column
+                            );
+
+                            if (value !== hydratedValue) {
+                                column.setEntityValue(
+                                    subject.entity!,
+                                    hydratedValue
+                                );
+                            }
+                        });
+                }
+
                 let updateGeneratedMap = updateResult.generatedMaps[0];
                 if (updateGeneratedMap) {
                     subject.metadata.columns.forEach(column => {
